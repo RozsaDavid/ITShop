@@ -1,0 +1,14 @@
+﻿@page "/categories"
+@using Microsoft.AspNetCore.Components.QuickGrid
+@inject ITShop.Data.RazsoContext DB
+
+<PageTitle>Termékek</PageTitle>
+
+<h1>Kategóriák</h1>
+
+<QuickGrid  Items="DB.ItKategoriaks">
+    <PropertyColumn Title="Kategória" Property="kategoria=>kategoria.Kategoria " />
+    <TemplateColumn class="text-center" Context="kategoria" Title="">
+        <a href="@($"products?CatId={kategoria.IdKategoria}&CatName={kategoria.Kategoria}")" class="btn btn-success">Termékek</a>
+    </TemplateColumn>
+</QuickGrid>

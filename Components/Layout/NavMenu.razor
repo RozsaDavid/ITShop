@@ -1,0 +1,82 @@
+﻿@inject NavigationManager MyNavigationManager
+
+@*localstorage*@
+@inject Blazored.LocalStorage.ILocalStorageService localStore
+
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<nav>
+    <ul>
+        <li><a class="@homeActive" @onclick="@menuHome" @onclick:preventDefault>Kezdőlap</a></li>
+        <li><a class="@categoryActive" @onclick="@menuCategory" @onclick:preventDefault>Kategóriák</a></li>
+        <li><a class="@productActive" @onclick="@menuProduct" @onclick:preventDefault>Termékek</a></li>
+        @if(CartLS.Count>0) {
+            <li><a class="@cartActive" @onclick="@menuCart" @onclick:preventDefault>Kosár</a></li>
+        }
+    </ul>
+</nav>
+
+@code {
+    //[CascadingParameter]
+    //public List<ItTermekek> Cart { get; set; }
+
+    //localstorage e
+    const string lsVarName = "CartLS";
+    public List<ItTermekek> CartLS = new List<ItTermekek>();
+
+    protected override async Task OnInitializedAsync() {
+        //localstorage
+        CartLS = await localStore.GetItemAsync<List<ItTermekek>>(lsVarName);
+        setTheMenu();
+    }
+
+    private string actualPageURL="";
+    private string homeActive="";
+    private string categoryActive="";
+    private string productActive="";
+    private string cartActive="inactiveCart";
+
+    public void setTheMenu() {
+        actualPageURL = MyNavigationManager.Uri;
+        if(actualPageURL == MyNavigationManager.BaseUri)
+            homeActive = "active";
+        else if(actualPageURL.Contains("categ"))
+            categoryActive = "active";
+        else if(actualPageURL.Contains("produ") || actualPageURL.Contains("Produ"))
+            productActive = "active";
+        else if(actualPageURL.Contains("Cart"))
+            cartActive = "activeCart";
+    }
+
+    private void menuHome() {
+        homeActive = "active";
+        categoryActive = "";
+        productActive = "";
+        cartActive = "inactiveCart";
+        MyNavigationManager.NavigateTo("");
+    }
+
+    private void menuProduct() {
+        homeActive = "";
+        categoryActive = "";
+        productActive = "active";
+        cartActive = "inactiveCart";
+        MyNavigationManager.NavigateTo("products?Cat=0");
+    }
+
+    private void menuCategory() {
+        homeActive = "";
+        categoryActive = "active";
+        productActive = "";
+        cartActive = "inactiveCart";
+        MyNavigationManager.NavigateTo("categories");
+    }
+
+    private void menuCart() {
+        homeActive = "";
+        categoryActive = "";
+        productActive = "";
+        cartActive = "activeCart";
+        MyNavigationManager.NavigateTo("showCart");
+    }
+}

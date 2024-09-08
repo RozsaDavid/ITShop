@@ -1,0 +1,25 @@
+﻿@using Microsoft.AspNetCore.Authorization
+
+@page "/"
+
+<PageTitle>D IT-Shop</PageTitle>
+
+<div class="row">
+    <AuthorizeView>
+         <NotAuthorized>
+            <div class="col-12">
+                <h1>Üdvözöllek az oldalon!</h1>
+            </div>
+            <div class="col-12">
+                <h2>Kérlek jelentkezz be a rendeléshez vagy tekintsd meg a termékeket!</h2>
+            </div>
+        </NotAuthorized>
+        <Authorized>
+                <div class="col-12">
+                    <h1>Üdvözöllek, @context.User.Identity.Name!</h1>
+                    <h2>Kellemes vásárlást!</h2>
+
+                </div>
+        </Authorized>
+    </AuthorizeView>
+</div>

@@ -1,0 +1,145 @@
+﻿@page "/showCart"
+
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Microsoft.AspNetCore.Authorization
+
+@inject ITShop.Data.RazsoContext DB
+@inject NavigationManager navigationManager
+@inject IJSRuntime Jsr
+
+@*localstorage*@
+@inject Blazored.LocalStorage.ILocalStorageService localStore
+
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<h1>Kosár tartalma</h1>
+
+@if(cartElemList is null) {
+    <p>Betöltés...</p>
+} else {
+    <QuickGrid Items="@cartElemList.AsQueryable()">
+        <PropertyColumn Title="Név" Property="elem => elem.termek.Nev" Sortable="true" />
+        <PropertyColumn Title="Ár (HUF)" Property="elem => elem.termek.Ar" Sortable="true" />
+        <TemplateColumn Context="elem" Title="Képek">
+            <img src="@($"{elem.termek.Fotolink}")" height="60">
+        </TemplateColumn>
+        <PropertyColumn Title="Mennyiség" Property="elem => elem.menny"/>
+        <TemplateColumn Class="text-center" Context="elem" Title="Képek">
+            <button @onclick="@(e => deleteProduct(elem.termek.Azon))" class="btn btn-danger">Törlés</button>
+        </TemplateColumn>
+    </QuickGrid>
+}
+
+<div class="row ">
+    <div class="col-12 ">
+        <div class="text-center mt-3">
+            <span class="text-black fw-bold fs-3">A rendelés végösszege: @osszeg HUF</span>
+        </div>
+    </div>
+</div>
+<div class="top-row px-4 text-center">
+    <AuthorizeView>
+        <NotAuthorized>
+            <span class="text-black fw-bold fs-3 ">A rendeléshez jelentkezzen be!</span>
+        </NotAuthorized>
+        <Authorized>
+            <button @onclick="rendeles" class="btn btn-success fs-3 me-2">Rendelés leadása</button>
+        </Authorized>
+    </AuthorizeView>
+</div>
+    
+
+@code {
+    //localstorage e
+    const string lsVarName = "CartLS";
+    public List<ItTermekek> CartLS = new List<ItTermekek>();
+
+    public class cartElem{
+        public ItTermekek termek;
+        public int menny;
+
+        public cartElem(ItTermekek termek, int menny) {
+            this.termek = termek;
+            this.menny = menny;
+        }
+    }
+
+    public List<cartElem> cartElemList;
+
+    public int osszeg = 0;
+
+    protected override async Task OnInitializedAsync() {
+        //localstorage
+        CartLS = await localStore.GetItemAsync<List<ItTermekek>>(lsVarName);
+
+        bool message = false;
+
+        foreach (ItTermekek elem in CartLS) {
+            if(!message) {
+                await Jsr.InvokeVoidAsync("alert", ("Ellenőrizze a tételeket rendelés előtt!"));
+                message = true;
+            }
+        }
+    }
+
+    protected override bool ShouldRender() {
+        listaFeltoltes();
+
+        return true;
+    }
+
+    public void listaFeltoltes() {
+        if(CartLS.Count > 0) {
+            cartElemList = new List<cartElem> { };
+            cartElemList.Add(new cartElem(CartLS[0], 0));
+            osszeg = 0;
+
+            bool volt = false;
+
+            foreach(ItTermekek elem in CartLS) {
+                foreach(cartElem cElem in cartElemList) {
+                    if(elem.Azon == cElem.termek.Azon) {
+                        cElem.menny++;
+                        volt = true;
+                    }
+                }
+                if(!volt)
+                    cartElemList.Add(new cartElem(elem, 1));
+                volt = false;
+                osszeg += elem.Ar;
+            }
+        } else {
+            localStore.ClearAsync();
+            navigationManager.NavigateTo("products?Cat=0");
+        }
+    }
+
+    public async Task deleteProduct(string azon) {
+        int deleteIndex = -1;
+        int i = 0;
+
+        foreach(ItTermekek elem in CartLS) {
+            if (elem.Azon == azon)
+                deleteIndex = i;
+            i++;
+        }
+
+        if(deleteIndex != -1) {
+            CartLS.RemoveAt(deleteIndex);
+            await Jsr.InvokeVoidAsync("alert", "A termék kikerült a kosárból");
+            UpdateLocalStorage();
+        }
+    }
+
+    public async void UpdateLocalStorage() {
+        await localStore.SetItemAsync(lsVarName, CartLS);
+        if(CartLS.Count == 0) {
+            navigationManager.NavigateTo(navigationManager.Uri, true);
+        }
+    }
+
+    public void rendeles() {
+        Jsr.InvokeVoidAsync("alert", ("Rendelés leadva!"));
+    }
+}

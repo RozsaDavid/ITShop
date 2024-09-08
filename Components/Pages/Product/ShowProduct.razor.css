@@ -1,0 +1,45 @@
+﻿* {
+    width: 99.817%;
+    margin: 0;
+    padding: 0;
+}
+
+.maincontainer{
+    position:relative;
+    padding-top: 2%;
+    left: 10%;
+    width:90%;
+    display: flex;
+}
+
+.datacontainer h2{
+    padding-left: 5%;
+    padding-top: 5%;
+    width: 50%;
+}
+
+.imagecontainer {
+    width: 30%;
+}
+
+.buttoncontainer{
+    position:relative;
+    width: 20%;
+    left: 40%;
+}
+
+.buttoncontainer a, .buttoncontainer button{
+    margin: 1%;
+    font-size: 30px;
+    border: 1px solid black;
+    border-radius: 20px;
+}
+
+
+
+/*img {
+    position: relative;
+    left: 10%;
+    width: 80%;
+    background-color: white;
+}*/

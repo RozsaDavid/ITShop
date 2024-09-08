@@ -1,0 +1,79 @@
+﻿@page "/registration"
+
+@using Microsoft.AspNetCore.Authorization
+@using System.Security.Cryptography
+@using System.Text
+@inject RazsoContext DB
+@inject NavigationManager NavigationManager
+@inject IJSRuntime Jsr
+
+@rendermode InteractiveServer
+
+
+<h1>Regisztráció</h1>
+<hr />
+
+<div class="row">
+    <div class="col-lg-4 offset-lg-4 pt-4 pb-4 border">
+        <EditForm method="post" FormName="create" OnValidSubmit="AddUser" Model="UserDB" Enhance>
+            <DataAnnotationsValidator />
+            <div class="mb-3">
+                <label for="name" class="form-label">Felhasználónév</label>
+                <InputText id="name" class="form-control" @bind-Value="UserDB.Nev" />
+                <ValidationMessage For="()=>UserDB.Nev" class="text-danger" />
+                <label for="password" class="form-label">Jelszó</label>
+                <InputText type="password" id="password" class="form-control" @bind-Value="UserDB.Password" />
+                <ValidationMessage For="()=>UserDB.Password" class="text-danger" />
+                <label for="email" class="form-label">E-mail</label>
+                <InputText id="email" class="form-control" @bind-Value="UserDB.Email" />
+                <ValidationMessage For="()=>UserDB.Email" class="text-danger" />
+                <label for="address" class="form-label">Cím</label>
+                <InputText id="address" class="form-control" @bind-Value="UserDB.Cim" />
+                <ValidationMessage For="()=>UserDB.Cim" class="text-danger" />
+                <label for="phone" class="form-label">Telefonszám</label>
+                <InputText id="phone" class="form-control" @bind-Value="UserDB.Telefon" />
+                <ValidationMessage For="()=>UserDB.Telefon" class="text-danger" />
+            </div>
+
+            <button type="submit" class="btn btn-success">Regisztrálás</button>
+            <a href="/" class="btn btn-primary">Vissza a főoldalra</a>
+        </EditForm>
+    </div>
+</div>
+
+
+@code {
+    [SupplyParameterFromForm]
+    public Userek UserDB { get; set; } = new();
+
+
+    public async Task AddUser() {
+        bool dataIsTaken = false;
+
+        foreach(var elem in DB.Usereks ) {
+            if(elem.Nev == UserDB.Nev || elem.Email == UserDB.Email)
+                dataIsTaken = true;
+        }
+
+        if(dataIsTaken) {
+            await Jsr.InvokeVoidAsync("alert", "A felhasználónév és/vagy az e-mail cím már foglalt!");
+            UserDB = new Userek();
+        } else {
+            var source = Encoding.UTF8.GetBytes(UserDB.Password);
+            var hashBytes = MD5.Create().ComputeHash(source);
+            UserDB.Password = BitConverter.ToString(hashBytes).Replace("-", "");
+
+            UserDB.Funkcio = 0;
+
+            await Jsr.InvokeVoidAsync("alert", "Mentés");
+
+            DB.Usereks.Add(UserDB);
+            await DB.SaveChangesAsync();
+
+            await Jsr.InvokeVoidAsync("alert", "Mentés ok");
+
+            UserDB.Password = String.Empty;
+            NavigationManager.NavigateTo("/");
+        }
+    }
+}

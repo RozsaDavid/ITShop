@@ -1,0 +1,79 @@
+﻿@page "/login"
+
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using System.Security.Cryptography
+@using System.Text
+@inject RazsoContext DB
+@inject NavigationManager NavManager
+
+<h1>Bejelentkezés</h1>
+<hr />
+<div class="row">
+    <div class="col-lg-4 offset-lg-4 pt-4 pb-4 border">
+            <h3>Login</h3>
+
+            <EditForm Model="loginModel" FormName="LoginForm" OnValidSubmit="Authenticate" Enhance>
+                <DataAnnotationsValidator />
+
+                <div class="mb-3">
+                    <label for="username" class="form-label">Felhasználónév:</label>
+                    <InputText id="username" @bind-Value="loginModel.Nev" class="form-control" placeholder="Felhasználónév" />
+                    <ValidationMessage For="()=>loginModel.Nev" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Jelszó:</label>
+                    <InputText type="password" id="password" @bind-Value="loginModel.Password" class="form-control" placeholder="Jelszó" />
+                    <ValidationMessage For="()=>loginModel.Password" class="text-danger" />
+                </div>
+                <div class="mb-3 text-center">
+                    <span class="text-danger">@errorMessage</span>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Bejelentkezés</button>
+
+            </EditForm>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public HttpContext httpContext { get; set; }
+
+    [SupplyParameterFromForm]
+    public Userek loginModel { get; set; } = new();
+
+    public string? errorMessage;
+
+    private async Task Authenticate() {
+
+        var userAccount = DB.Usereks.Where(x => x.Nev == loginModel.Nev).FirstOrDefault();
+
+        var source = Encoding.UTF8.GetBytes(loginModel.Password);
+        var hashBytes = MD5.Create().ComputeHash(source);
+        loginModel.Password = BitConverter.ToString(hashBytes).Replace("-", "");
+
+        if(userAccount is null || userAccount.Password != loginModel.Password) {
+            errorMessage = "A felhasználónév vagy jelszó nem egyezik.";
+            loginModel.Password = String.Empty;
+            return;
+        }
+
+        loginModel.Password = String.Empty;
+
+        var claims = new List<Claim>
+                        {
+            new Claim(ClaimTypes.Name, loginModel.Nev),
+        };
+
+        ClaimsIdentity identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        ClaimsPrincipal principal = new ClaimsPrincipal(identity);
+
+        await httpContext.SignInAsync(principal);
+
+        httpContext.Response.Redirect("Home");
+
+        NavManager.NavigateTo("/");
+    }
+}

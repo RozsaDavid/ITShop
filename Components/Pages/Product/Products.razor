@@ -1,0 +1,51 @@
+﻿@page "/products"
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Microsoft.EntityFrameworkCore
+@inject ITShop.Data.RazsoContext DB
+@inject NavigationManager navigationManager
+
+@rendermode InteractiveServer
+
+<PageTitle>Termékek</PageTitle>
+
+@if(CatId == 0) {
+    <h1>Összes termék</h1>
+} else {
+    <h1>@CatName kategória termékei</h1>
+}
+
+<div class="quicktable">
+@if(DB.ItTermekeks is null) {
+    <p>Betöltés...</p>
+} else {
+    <QuickGrid Items="DB.ItTermekeks.Where(termek=>( (CatId==0 && termek.Aktiv.Contains(aktivFilter) && termek.Nev.Contains(nameFilter))) || (CatId==termek.IdKategoria && termek.Aktiv.Contains(aktivFilter) && termek.Nev.Contains(nameFilter)) )" Pagination="state">
+        <PropertyColumn Property="termek=>termek.Nev" Title="Terméknév" Sortable="true">
+            <ColumnOptions >
+            <div class="search-box">
+                <input type="search" icon="" autofocus @bind="nameFilter" @bind:event="oninput" placeholder="Név..." />
+            </div>
+            </ColumnOptions>
+        </PropertyColumn>
+            <PropertyColumn Title="Ár (HUF)"  Property="termek=>termek.Ar" Sortable="true" />
+        <TemplateColumn Context="termek" Title="Képek">
+            <img src="@($"{termek.Fotolink}")" height="60">
+        </TemplateColumn>
+        <TemplateColumn class="text-center" Context="termek" Title="">
+            <a href="@($"showProduct?Id={termek.Azon}&Name={termek.Nev}&Photo={termek.Fotolink}&Text={termek.Leiras}&Price={termek.Ar}")" class="btn btn-success">Megtekintés</a>
+        </TemplateColumn>
+    </QuickGrid>
+    <Paginator State="state" />
+}
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int CatId { get; set; }
+    [SupplyParameterFromQuery]
+    public string CatName { get; set; }
+
+    PaginationState state = new PaginationState { ItemsPerPage = 10 };
+
+    string nameFilter = "";
+    string aktivFilter = "Y";
+}

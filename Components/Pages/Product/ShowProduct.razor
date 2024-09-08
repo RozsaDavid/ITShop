@@ -1,0 +1,78 @@
+﻿@page "/showProduct"
+
+@using Microsoft.EntityFrameworkCore
+@inject ITShop.Data.RazsoContext DB
+@inject NavigationManager navigationManager
+@inject IJSRuntime Jsr
+
+@*localstorage*@
+@inject Blazored.LocalStorage.ILocalStorageService localStore
+
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<h1>@(Name)</h1>
+
+<div class="maincontainer">
+        
+        <div class="imagecontainer">
+            <img src="@(Photo)">
+        </div>
+        <div class="datacontainer">
+            <h2>Leírás: @(Text)</h2>
+            <h2>Ár: @(Price) HUF</h2>
+        </div>
+ </div>
+
+ <div class="buttoncontainer">
+    <button type="submit" class="btn btn-primary " @onclick="addToCart">Kosárba</button>
+    <a type="button" class="btn btn-success" href="/showCart">Kosár tartalma</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public string Id { get; set; }
+    [SupplyParameterFromQuery]
+    public string Name { get; set; }
+    [SupplyParameterFromQuery]
+    public string Photo { get; set; }
+    [SupplyParameterFromQuery]
+    public string Text { get; set; }
+    [SupplyParameterFromQuery]
+    public int Price { get; set; }
+
+    public ItTermekek TermekDB { get; set; }
+
+    //localstorage e
+    const string lsVarName = "CartLS";
+    public List<ItTermekek> CartLS = new List<ItTermekek>();
+
+    protected override async Task OnInitializedAsync() {
+        CartLS = await localStore.GetItemAsync<List<ItTermekek>>(lsVarName);
+
+    }
+
+    public async void UpdateLocalStorage() {
+        await localStore.SetItemAsync(lsVarName, CartLS);
+        if(CartLS.Count==1)
+            navigationManager.NavigateTo(navigationManager.Uri, true);
+    }
+    //localstorage v
+
+    public async void addToCart() {
+        TermekDB = await DB.ItTermekeks.FirstOrDefaultAsync(m => m.Azon == Id);
+        //Cart.Add(TermekDB);
+
+        //localsorage e
+        if(CartLS is null) {
+            CartLS = new List<ItTermekek>();
+        }
+        CartLS.Add(TermekDB);
+        UpdateLocalStorage();
+
+        
+
+        //localsorage v
+
+        await Jsr.InvokeVoidAsync("alert", "A termék a kosárba került!");
+    }
+}

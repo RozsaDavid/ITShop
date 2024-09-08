@@ -1,0 +1,72 @@
+﻿@inherits LayoutComponentBase
+
+@inject IJSRuntime JsRuntime
+<div class="page-container">
+    <header>
+        <img class="logo" src="./images/favicon.png" />
+        <div class="loginmenu">
+            <AuthorizeView>
+                <NotAuthorized>
+                    <a href="/login" class="btn btn-danger me-2">Bejelentkezés</a>
+                    <a href="/registration" class="btn btn-danger me-2">Regisztráció</a>
+                </NotAuthorized>
+                <Authorized>
+                    <a href="/logout" class="btn btn-danger">Kijelentkezés</a>
+                </Authorized>
+            </AuthorizeView>
+        </div>
+    </header>
+
+    <NavMenu />
+
+    <div class="content">
+        <section class="sec1"></section>
+
+        <article>
+            @Body
+        </article>
+
+    </div>
+
+    <footer>
+        Made by D. 2024
+    </footer>
+
+</div>
+
+
+
+@*@inherits LayoutComponentBase
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+            
+            <AuthorizeView>
+                <NotAuthorized>
+                    <a href="/login" class="btn btn-primary me-2">Bejelentkezés</a>
+                    <a href="/registration" class="btn btn-primary">Regisztráció</a>
+                </NotAuthorized>
+                <Authorized>
+                    <a href="/logout" class="btn btn-primary">Kijelentkezés</a>
+                </Authorized>
+            </AuthorizeView>
+
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>*@
+
